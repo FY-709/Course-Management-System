@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.tust.dao.MySqlMapper">
+    <resultMap id="CoursesResultMap" type="cn.tust.model.Courses">
+        <constructor>
+            <idArg column="cNumber" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="cName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="cTeacher" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="cWeek" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="cPart" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="cClassroom" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="cCount" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="StudentsResultMap" type="cn.tust.model.Students">
+        <constructor>
+            <idArg column="sNumber" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="sName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="sClass" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="sAge" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="ScoreResultMap" type="cn.tust.model.Scores">
+        <constructor>
+            <idArg column="cNumber" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+            <arg column="cName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="cTeacher" javaType="java.lang.String" jdbcType="VARCHAR"/>
+            <arg column="cScore" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        </constructor>
+    </resultMap>
+
+    <select id="selectChosenCourses" parameterType="java.util.List" resultMap="CoursesResultMap">
+        select c.cNumber, c.cName, c.cTeacher, c.cWeek, c.cPart, c.cClassroom, c.cCount
+        from courses c,
+             timetable ta
+        where c.cNumber =
+              (select ta.cNumber
+               where ta.sNumber = #{sNumber})
+    </select>
+
+    <select id="selectUnchosenCourses" parameterType="java.util.List" resultMap="CoursesResultMap">
+        select c.cNumber, c.cName, c.cTeacher, c.cWeek, c.cPart, c.cClassroom, c.cCount
+        from courses c
+        where c.cNumber not in
+              (select ta.cNumber from timetable ta where ta.sNumber = #{sNumber})
+    </select>
+
+    <select id="selectScores" parameterType="java.util.List" resultMap="ScoreResultMap">
+        select c.cNumber, c.cName, c.cTeacher, ta.cScore
+        from courses c,
+             timetable ta
+        where c.cNumber =
+              (select ta.cNumber where ta.sNumber = #{sNumber})
+    </select>
+
+    <select id="selectStudents" parameterType="java.util.List" resultMap="StudentsResultMap">
+        select s.sNumber, s.sName, s.sClass, s.sAge
+        from students s,
+             timetable ta,
+             courses c,
+             teachers t
+        where s.sNumber =
+              (select ta.sNumber
+               where ta.cNumber =
+                     (select c.cNumber
+
+                      where c.cName =
+                            (select t.tClass where t.tNumber = #{tNumber})
+                     )
+              )
+    </select>
+
+    <select id="selectCnumber" parameterType="Integer" resultType="cn.tust.model.Courses">
+        select c.cNumber
+        from courses c,
+             teachers t
+        where c.cName =
+              (select t.tClass where t.tNumber = #{tNumber})
+    </select>
+</mapper>
